@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Long View — ValuMonk Tax Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14271f; --soft:#5b6b62; --faint:#9aa69f;
+    --line:#e4e8e3; --line2:#eef1ed;
+    --blue:#313495; --blue-soft:#5a5dc0;
+    --green:#06b050; --green-deep:#048a3e;
+    --sky:#f4f7f3; --paper:#fbfcfa; --card:#ffffff;
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --sh:0 1px 2px rgba(20,39,31,.04),0 8px 24px rgba(20,39,31,.05);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ---- top bar ---- */
+  .bar{display:flex;justify-content:space-between;align-items:center;padding:22px 0}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo .mk{width:40px;height:40px;flex:none}
+  .logo .nm{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:-.2px}
+  .logo .nm b{color:var(--blue);font-weight:600} .logo .nm i{color:var(--green);font-style:normal}
+  .bar .nav{font-size:14px;color:var(--soft);text-decoration:none}
+  .bar .nav:hover{color:var(--ink)}
+
+  /* ---- hero ---- */
+  .hero{position:relative;text-align:center;padding:46px 0 0;overflow:hidden}
+  .hero .kicker{font-size:13px;letter-spacing:2.5px;text-transform:uppercase;color:var(--green-deep);font-weight:600}
+  .hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(36px,7vw,68px);line-height:1.04;
+    margin:18px 0 0;letter-spacing:-1px}
+  .hero h1 em{font-style:italic;color:var(--blue)}
+  .hero .lede{max-width:560px;margin:20px auto 0;color:var(--soft);font-size:18px}
+  .scene{margin-top:30px;position:relative;width:100%}
+  .scene svg{display:block;width:100%;height:auto}
+
+  /* ---- toggle ---- */
+  .toggle{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);
+    border-radius:100px;padding:5px;box-shadow:var(--sh);position:relative;z-index:3;margin-top:-30px}
+  .toggle button{border:none;background:none;cursor:pointer;font-family:var(--sans);
+    padding:9px 20px;border-radius:100px;font-size:14px;color:var(--soft);transition:.25s;font-weight:500}
+  .toggle button.on{background:var(--blue);color:#fff}
+  .toggle-note{font-size:13px;color:var(--faint);margin-top:12px;min-height:18px;font-style:italic;font-family:var(--serif)}
+
+  /* ---- step cards ---- */
+  .flow{margin-top:54px;display:flex;flex-direction:column;gap:20px}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px 32px;box-shadow:var(--sh)}
+  .step-h{display:flex;align-items:center;gap:13px;margin-bottom:24px}
+  .step-h .dot{width:30px;height:30px;border-radius:50%;background:var(--sky);color:var(--green-deep);
+    display:grid;place-items:center;font-weight:700;font-size:14px;flex:none;font-family:var(--serif)}
+  .step-h h2{font-family:var(--serif);font-weight:500;font-size:23px;margin:0;letter-spacing:-.3px}
+  .step-h .tail{margin-left:auto;font-size:14px;color:var(--faint)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px 28px}
+  @media(max-width:620px){.grid2{grid-template-columns:1fr}}
+  .f{display:flex;flex-direction:column}.f.full{grid-column:1/-1}
+  .f label{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:7px}
+  .f .sub{font-size:12px;color:var(--faint);margin-top:6px}
+  .inp{position:relative}
+  .inp .ru{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:15px}
+  .f input[type=number]{width:100%;border:1.5px solid var(--line);border-radius:12px;
+    padding:13px 14px 13px 30px;font-size:16px;font-family:var(--sans);color:var(--ink);outline:none;transition:.15s;background:var(--paper)}
+  .f input[type=number]:focus{border-color:var(--green);background:#fff}
+  .pills{display:flex;gap:8px;flex-wrap:wrap}
+  .pills button{border:1.5px solid var(--line);background:var(--paper);border-radius:100px;
+    padding:10px 18px;cursor:pointer;font-family:var(--sans);font-size:14px;color:var(--soft);transition:.15s}
+  .pills button.on{border-color:var(--green);background:var(--sky);color:var(--green-deep);font-weight:600}
+  .hide{display:none!important}
+
+  /* ---- result / mountain signature ---- */
+  .result{margin-top:46px;background:linear-gradient(180deg,#fff,#fafdfb);
+    border:1px solid var(--line);border-radius:24px;padding:42px 34px;box-shadow:var(--sh);text-align:center;position:relative;overflow:hidden}
+  .result .lead{font-size:16px;color:var(--soft)}
+  .bignum{font-family:var(--serif);font-weight:600;font-size:clamp(48px,11vw,90px);line-height:1;
+    margin:10px 0 4px;letter-spacing:-2px}
+  .bignum.g{color:var(--green-deep)} .bignum.b{color:var(--blue)}
+  .result .perm{color:var(--soft);font-size:16px}
+  .paths{margin:34px auto 0;max-width:560px}
+  .pathlabels{display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--soft)}
+
+  .twocard{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px;text-align:left}
+  @media(max-width:620px){.twocard{grid-template-columns:1fr}}
+  .rc{border:1.5px solid var(--line);border-radius:16px;padding:20px 22px;position:relative;background:#fff}
+  .rc.win{border-color:var(--green);background:linear-gradient(180deg,#fff,#f5fcf8)}
+  .rc .rt{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .rc .rv{font-family:var(--serif);font-size:32px;margin:8px 0 2px}
+  .rc.win .rv{color:var(--green-deep)}
+  .rc .re{font-size:13px;color:var(--soft)}
+  .rc .flag{position:absolute;top:16px;right:16px;font-size:10px;font-weight:700;letter-spacing:.5px;
+    background:var(--green);color:#fff;padding:3px 9px;border-radius:100px;text-transform:uppercase;display:none}
+  .rc.win .flag{display:block}
+
+  /* ---- invested value ---- */
+  .invest{margin-top:20px;background:var(--blue);color:#fff;border-radius:24px;padding:36px 34px;position:relative;overflow:hidden}
+  .invest::after{content:"";position:absolute;right:-40px;bottom:-60px;width:220px;height:220px;
+    border-radius:50%;background:rgba(255,255,255,.06)}
+  .invest .ek{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#b9bbe8;font-weight:600}
+  .invest h3{font-family:var(--serif);font-weight:500;font-size:25px;margin:8px 0 18px;max-width:520px;line-height:1.25}
+  .invest .ctrl{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+  .invest .ctrl label{font-size:14px;color:#d6d7f2}
+  .invest input[type=range]{accent-color:var(--green);width:180px}
+  .invest .yrsout{font-family:var(--serif);font-size:18px;font-weight:600}
+  .grown{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .grown .big{font-family:var(--serif);font-weight:600;font-size:clamp(40px,9vw,64px);color:#fff;line-height:1;letter-spacing:-1px}
+  .grown .vs{color:#b9bbe8;font-size:15px}
+  .invest .dis{font-size:12px;color:#a9abdf;margin-top:18px;max-width:560px;line-height:1.6}
+
+  /* ---- breakdown ---- */
+  table{width:100%;border-collapse:collapse;font-size:15px;margin-top:4px}
+  thead th{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--faint);font-weight:700;
+    text-align:right;padding:0 6px 14px}thead th:first-child{text-align:left}
+  tbody td{text-align:right;padding:12px 6px;border-top:1px solid var(--line2)}
+  tbody td:first-child{text-align:left;color:var(--soft)}
+  tbody tr.b td{font-weight:600;color:var(--ink)}
+  tbody tr.t td{border-top:2px solid var(--ink);font-family:var(--serif);font-size:19px}
+  tbody tr.t td.win{color:var(--green-deep)}
+  .neg{color:var(--faint)}
+
+  /* ---- suggestions ---- */
+  .tips{display:flex;flex-direction:column;gap:0}
+  .tip{display:grid;grid-template-columns:auto 1fr;gap:18px;padding:20px 0;border-top:1px solid var(--line)}
+  .tip:first-child{border-top:none}
+  .tip .ic{width:38px;height:38px;border-radius:11px;background:var(--sky);display:grid;place-items:center;flex:none}
+  .tip .ic svg{width:20px;height:20px;stroke:var(--green-deep)}
+  .tip h4{margin:0 0 4px;font-size:16px}
+  .tip p{margin:0;color:var(--soft);font-size:14.5px}
+  .tip .badge{font-size:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:700;color:var(--blue);margin-left:8px}
+
+  /* ---- download ---- */
+  .actions{margin-top:30px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{border:none;cursor:pointer;font-family:var(--sans);font-weight:600;font-size:15px;
+    padding:14px 26px;border-radius:100px;transition:.15s}
+  .btn.primary{background:var(--green);color:#fff}.btn.primary:hover{background:var(--green-deep)}
+  .btn.ghost{background:none;border:1.5px solid var(--line);color:var(--ink)}.btn.ghost:hover{border-color:var(--soft)}
+
+  footer{margin:60px 0 48px;padding-top:26px;border-top:1px solid var(--line);
+    color:var(--faint);font-size:12.5px;line-height:1.75}
+  footer b{color:var(--soft);font-weight:600}
+
+  @media print{
+    body{background:#fff}
+    .bar .nav,.actions{display:none!important}
+    .step,.result,.invest{box-shadow:none;break-inside:avoid}
+    .invest{background:var(--blue)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .toggle{box-shadow:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="bar">
+    <div class="logo">
+      <svg class="mk" viewBox="0 0 40 40" fill="none"><path d="M5 30 L13 14 L20 24 L27 10 L35 30" stroke="#313495" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 30 L18 18 L24 26 L31 13 L35 19" stroke="#06b050" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M31 13 l5 -2 l-1 5" stroke="#06b050" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nm"><b>Valu</b><i>Monk</i></span>
+    </div>
+    <a class="nav" href="#">← Back to home</a>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="kicker">Free tax tool</div>
+    <h1>Pick the regime<br>that <em>keeps you more.</em></h1>
+    <p class="lede">Old or new? Answer a few plain questions and we'll map both routes — what you'd pay, what you'd save, and what that saving could become over time.</p>
+
+    <div class="scene">
+      <svg viewBox="0 0 960 220" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f4f7f3"/><stop offset="1" stop-color="#fbfcfa"/>
+          </linearGradient>
+          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#06b050" stop-opacity=".18"/><stop offset="1" stop-color="#06b050" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#313495" stop-opacity=".16"/><stop offset="1" stop-color="#313495" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <rect width="960" height="220" fill="url(#sky)"/>
+        <circle cx="480" cy="118" r="46" fill="#06b050" opacity="0.08"/>
+        <circle cx="480" cy="118" r="30" fill="#06b050" opacity="0.10"/>
+        <!-- back ridge (blue) -->
+        <path d="M0 200 L150 120 L300 170 L470 90 L620 150 L780 100 L960 165 L960 220 L0 220 Z" fill="url(#g2)"/>
+        <path d="M0 200 L150 120 L300 170 L470 90 L620 150 L780 100 L960 165" fill="none" stroke="#313495" stroke-width="2" stroke-opacity=".45" stroke-linejoin="round"/>
+        <!-- front ridge (green) -->
+        <path d="M0 220 L120 175 L260 205 L430 150 L600 195 L760 160 L960 200 L960 220 Z" fill="url(#g1)"/>
+        <path d="M0 220 L120 175 L260 205 L430 150 L600 195 L760 160 L960 200" fill="none" stroke="#06b050" stroke-width="2.2" stroke-opacity=".55" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="toggle" id="yt">
+      <button data-fy="2025" class="on">FY 2025–26</button>
+      <button data-fy="2026">FY 2026–27</button>
+    </div>
+    <div class="toggle-note" id="ytn">Tax year ending March 2026 · Income-tax Act, 1961</div>
+  </div>
+
+  <!-- FLOW -->
+  <div class="flow">
+
+    <!-- step 1 -->
+    <div class="step">
+      <div class="step-h"><span class="dot">1</span><h2>About you</h2><span class="tail" id="t1"></span></div>
+      <div class="grid2">
+        <div class="f">
+          <label>Your age</label>
+          <div class="inp"><input type="number" id="age" value="35" min="18" max="120"></div>
+          <span class="sub" id="ageSub"></span>
+        </div>
+        <div class="f">
+          <label>What describes you best</label>
+          <div class="pills" id="profile">
+            <button data-v="salaried" class="on">Salaried</button>
+            <button data-v="retired">Retired</button>
+            <button data-v="business">Self-employed</button>
+          </div>
+        </div>
+        <div class="f" id="cityF">
+          <label>Do you live in a metro city?</label>
+          <div class="pills" id="city">
+            <button data-v="metro" class="on">Yes — metro</button>
+            <button data-v="nonmetro">No</button>
+          </div>
+          <span class="sub" id="citySub"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- step 2 -->
+    <div class="step">
+      <div class="step-h"><span class="dot">2</span><h2 id="incH">What you earn</h2><span class="tail" id="t2"></span></div>
+      <div class="grid2">
+        <div class="f" id="salF">
+          <label>Annual salary</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="salary" value="1980000"></div>
+          <span class="sub">Gross, before tax</span>
+        </div>
+        <div class="f hide" id="penF">
+          <label>Annual pension</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="pension" value="0"></div>
+          <span class="sub">Gross pension received in the year</span>
+        </div>
+        <div class="f hide" id="bizF">
+          <label>Business / professional income</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="biz" value="0"></div>
+          <span class="sub">Net profit, after expenses</span>
+        </div>
+        <div class="f" id="basicF">
+          <label>Basic + DA</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="basic" value="990000"></div>
+          <span class="sub">Used for the rent &amp; NPS limits</span>
+        </div>
+        <div class="f" id="hraF">
+          <label>HRA you receive</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="hra" value="396000"></div>
+          <span class="sub">House-rent allowance, annual</span>
+        </div>
+        <div class="f">
+          <label>Interest income</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="interest" value="0"></div>
+          <span class="sub">Fixed deposits, savings, bonds</span>
+        </div>
+        <div class="f">
+          <label>Rental income received</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="rental" value="0"></div>
+          <span class="sub">Net rent, if you let out property</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- step 3 -->
+    <div class="step">
+      <div class="step-h"><span class="dot">3</span><h2>What you can claim</h2>
+        <span class="tail" id="t3"></span></div>
+      <p style="margin:-8px 0 22px;color:var(--soft);font-size:14.5px">These mostly help the <b style="color:var(--ink)">old</b> regime. Leave blank what doesn't apply — the new regime ignores most of them anyway.</p>
+      <div class="grid2">
+        <div class="f" id="rentPaidF">
+          <label>Rent you pay</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="rentPaid" value="360000"></div>
+          <span class="sub">Annual, counts toward the rent benefit</span>
+        </div>
+        <div class="f">
+          <label>80C investments</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="c80" value="150000"></div>
+          <span class="sub">EPF, PPF, ELSS, insurance — capped at ₹1.5L</span>
+        </div>
+        <div class="f">
+          <label>Your own NPS (80CCD-1B)</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="nps1b" value="0"></div>
+          <span class="sub">Extra ₹50,000 — old regime only</span>
+        </div>
+        <div class="f">
+          <label>Employer's NPS contribution</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="npsEmp" value="0"></div>
+          <span class="sub">Helps in both regimes — up to 14% of basic</span>
+        </div>
+        <div class="f">
+          <label>Health insurance (80D)</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="d80" value="25000"></div>
+          <span class="sub">Premiums for you and your parents</span>
+        </div>
+        <div class="f">
+          <label>Home loan interest</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="home" value="0"></div>
+          <span class="sub">Self-occupied — capped at ₹2L, old only</span>
+        </div>
+        <div class="f">
+          <label>Education loan interest (80E)</label>
+          <div class="inp"><span class="ru">₹</span><input type="number" id="e80" value="0"></div>
+          <span class="sub">No cap, old regime only</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result" id="resultCard">
+    <div class="lead" id="rlead">Working out both routes…</div>
+    <div class="bignum g" id="bignum">—</div>
+    <div class="perm" id="perm"></div>
+
+    <div class="paths">
+      <svg viewBox="0 0 560 200" id="pathSvg" aria-hidden="true" style="width:100%;height:auto">
+        <!-- mountain -->
+        <path d="M20 180 L210 60 L280 95 L400 30 L540 180 Z" fill="#f4f7f3" stroke="#e4e8e3" stroke-width="1.5"/>
+        <!-- flag at summit -->
+        <line x1="400" y1="30" x2="400" y2="12" stroke="#5b6b62" stroke-width="2"/>
+        <path id="flag" d="M400 13 l16 5 l-16 5 Z" fill="#9aa69f"/>
+        <!-- old path -->
+        <path id="pathOld" d="M70 178 C 150 170, 180 120, 250 100 S 360 70, 400 31"
+          fill="none" stroke="#313495" stroke-width="3" stroke-dasharray="5 6" opacity=".55"/>
+        <!-- new path -->
+        <path id="pathNew" d="M120 178 C 200 168, 230 110, 300 92 S 370 55, 400 31"
+          fill="none" stroke="#06b050" stroke-width="3" stroke-dasharray="5 6" opacity=".55"/>
+        <circle id="dotOld" r="6" fill="#313495"><animateMotion dur="0s"/></circle>
+        <circle id="dotNew" r="6" fill="#06b050"/>
+      </svg>
+      <div class="pathlabels"><span style="color:var(--blue)">● Old regime route</span><span style="color:var(--green-deep)">● New regime route</span></div>
+    </div>
+
+    <div class="twocard">
+      <div class="rc" id="rcOld">
+        <span class="flag">Lower</span>
+        <div class="rt">Old regime</div>
+        <div class="rv" id="oldV">—</div>
+        <div class="re" id="oldE"></div>
+      </div>
+      <div class="rc" id="rcNew">
+        <span class="flag">Lower</span>
+        <div class="rt">New regime</div>
+        <div class="rv" id="newV">—</div>
+        <div class="re" id="newE"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVESTED VALUE -->
+  <div class="invest" id="investCard">
+    <div class="ek">The long view</div>
+    <h3 id="investH">And if you invested that saving instead of spending it…</h3>
+    <div class="ctrl">
+      <label>Assumed return</label>
+      <div class="pills" id="rate" style="display:inline-flex">
+        <button data-r="8" style="border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff">8%</button>
+        <button data-r="10" class="on" style="border-color:#06b050;background:#06b050;color:#fff">10%</button>
+        <button data-r="12" style="border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff">12%</button>
+      </div>
+      <label style="margin-left:10px">Over</label>
+      <input type="range" id="yrs" min="3" max="25" value="10">
+      <span class="yrsout"><span id="yrsN">10</span> years</span>
+    </div>
+    <div class="grown">
+      <span class="big" id="grownV">—</span>
+      <span class="vs" id="grownVs"></span>
+    </div>
+    <p class="dis">This shows what your <b style="color:#fff">annual</b> tax saving could become if invested each year at the assumed return — illustrative only, compounded yearly. Returns are not guaranteed and investments carry risk. This is not investment advice.</p>
+  </div>
+
+  <!-- BREAKDOWN -->
+  <div class="step" style="margin-top:20px">
+    <div class="step-h"><span class="dot">✓</span><h2>How we got there</h2><span class="tail">annual figures</span></div>
+    <table><thead><tr><th>Component</th><th>Old regime</th><th>New regime</th></tr></thead>
+      <tbody id="bd"></tbody></table>
+  </div>
+
+  <!-- SUGGESTIONS -->
+  <div class="step" style="margin-top:20px">
+    <div class="step-h"><span class="dot">☆</span><h2>Ways you might save more</h2></div>
+    <div class="tips" id="tips"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn primary" id="dl">Download my report (PDF)</button>
+    <button class="btn ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">Start over</button>
+  </div>
+
+  <footer id="foot"></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const fmtL=n=>'₹'+(n/100000).toFixed(2)+' L';
+let S={profile:'salaried',city:'metro',fy:'2025',rate:10,yrs:10};
+
+/* pill groups */
+document.querySelectorAll('.pills').forEach(p=>p.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(p.id==='rate'){
+    p.querySelectorAll('button').forEach(x=>{x.classList.remove('on');
+      x.style.borderColor='rgba(255,255,255,.3)';x.style.background='rgba(255,255,255,.08)';});
+    b.classList.add('on');b.style.borderColor='#06b050';b.style.background='#06b050';
+    S.rate=+b.dataset.r;invest();return;
+  }
+  p.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  S[p.id]=b.dataset.v; if(p.id==='profile')applyProfile(); calc();
+}));
+$('yt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  $('yt').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  S.fy=b.dataset.fy;
+  $('ytn').textContent = S.fy==='2025'
+    ? 'Tax year ending March 2026 · Income-tax Act, 1961'
+    : 'Tax year ending March 2027 · Income-tax Act, 2025';
+  $('citySub').textContent = S.fy==='2026'
+    ? 'From this year, Bengaluru, Pune, Hyderabad & Ahmedabad also count as metros.' : '';
+  calc();
+});
+$('yrs').addEventListener('input',()=>{S.yrs=+$('yrs').value;$('yrsN').textContent=S.yrs;invest();});
+
+function applyProfile(){const p=S.profile;
+  $('salF').classList.toggle('hide',p!=='salaried');
+  $('hraF').classList.toggle('hide',p!=='salaried');
+  $('basicF').classList.toggle('hide',p==='business');
+  $('penF').classList.toggle('hide',p!=='retired');
+  $('bizF').classList.toggle('hide',p!=='business');
+  $('cityF').classList.toggle('hide',p!=='salaried');
+  $('incH').textContent = p==='retired'?'What you earn in retirement':'What you earn';
+}
+
+/* ---- tax engine ---- */
+function slab(inc,s){let t=0,p=0;for(const[c,r]of s){if(inc>p){t+=(Math.min(inc,c)-p)*r;p=c;}else break;}return t;}
+const NEW=[[400000,0],[800000,.05],[1200000,.10],[1600000,.15],[2000000,.20],[2400000,.25],[Infinity,.30]];
+function oldS(age){const e=age>=80?500000:age>=60?300000:250000;return[[e,0],[500000,.05],[1000000,.20],[Infinity,.30]];}
+function surch(t,i){let r=0;if(i>50000000)r=.37;else if(i>20000000)r=.25;else if(i>10000000)r=.15;else if(i>5000000)r=.10;return t*r;}
+function taxNew(x){let t=slab(x,NEW);if(x<=1200000)t=Math.max(0,t-Math.min(t,60000));else t=Math.min(t,x-1200000);return(t+surch(t,x))*1.04;}
+function taxOld(x,age){let t=slab(x,oldS(age));if(x<=500000)t=Math.max(0,t-Math.min(t,12500));return(t+surch(t,x))*1.04;}
+
+let LAST={};
+function calc(){
+  const age=+$('age').value||0, p=S.profile;
+  $('ageSub').textContent = age>=80?'Super-senior — ₹5L is tax-free under the old regime'
+    :age>=60?'Senior — ₹3L is tax-free under the old regime':'Under 60 — ₹2.5L is tax-free under the old regime';
+  $('t1').textContent=(age<60?'Under 60':age<80?'Senior':'Super-senior');
+
+  const salary=p==='salaried'?+$('salary').value||0:0;
+  const pension=p==='retired'?+$('pension').value||0:0;
+  const biz=p==='business'?+$('biz').value||0:0;
+  const basic=+$('basic').value||0,hra=+$('hra').value||0;
+  const interest=+$('interest').value||0,rental=+$('rental').value||0,rentPaid=+$('rentPaid').value||0;
+  const c80=Math.min(+$('c80').value||0,150000),nps1b=Math.min(+$('nps1b').value||0,50000);
+  const npsEmp=Math.min(+$('npsEmp').value||0,0.14*basic);
+  const d80=+$('d80').value||0,home=Math.min(+$('home').value||0,200000),e80=+$('e80').value||0;
+
+  const salLike=salary+pension, gross=salLike+biz+interest+rental;
+  $('t2').textContent=fmtL(gross);
+
+  let hraEx=0;
+  if(p==='salaried'&&hra>0){const pct=S.city==='metro'?.5:.4;
+    hraEx=Math.max(0,Math.min(hra,pct*basic,Math.max(0,rentPaid-0.1*basic)));}
+  const ttb=age>=60?Math.min(interest,50000):0;
+
+  const stdOld=salLike>0?50000:0, chapOld=c80+nps1b+npsEmp+d80+e80+ttb;
+  const txOld=Math.max(0,gross-stdOld-hraEx-home-chapOld), tOld=taxOld(txOld,age);
+  const stdNew=salLike>0?75000:0, txNew=Math.max(0,gross-stdNew-npsEmp), tNew=taxNew(txNew);
+  $('t3').textContent=fmtL(stdOld+hraEx+home+chapOld);
+
+  const oldWins=tOld<tNew, save=Math.abs(tOld-tNew);
+  $('rlead').textContent= save<1?'Both routes arrive at the same place':'By choosing the '+(oldWins?'old':'new')+' regime you keep';
+  $('bignum').textContent= save<1?'₹0 difference':fmt(save);
+  $('bignum').className='bignum '+(oldWins?'b':'g');
+  $('perm').textContent= save<1?'Either regime works — pick whichever is simpler for you.':'extra every year — about '+fmt(save/12)+' a month';
+  $('oldV').textContent=fmt(tOld);$('newV').textContent=fmt(tNew);
+  $('oldE').textContent='Effective rate '+(gross?(tOld/gross*100).toFixed(1):0)+'%';
+  $('newE').textContent='Effective rate '+(gross?(tNew/gross*100).toFixed(1):0)+'%';
+  $('rcOld').classList.toggle('win',oldWins);$('rcNew').classList.toggle('win',!oldWins);
+
+  // animate the winning path's climber to the summit
+  animatePaths(oldWins);
+
+  $('bd').innerHTML=`
+    <tr><td>Income considered</td><td>${fmt(gross)}</td><td>${fmt(gross)}</td></tr>
+    <tr><td>Rent benefit (HRA)</td><td class="neg">−${fmt(hraEx)}</td><td class="neg">—</td></tr>
+    <tr><td>Standard deduction</td><td class="neg">−${fmt(stdOld)}</td><td class="neg">−${fmt(stdNew)}</td></tr>
+    <tr><td>Home-loan interest</td><td class="neg">−${fmt(home)}</td><td class="neg">—</td></tr>
+    <tr><td>Investments, insurance &amp; NPS</td><td class="neg">−${fmt(chapOld)}</td><td class="neg">−${fmt(npsEmp)}</td></tr>
+    <tr class="b"><td>Taxable income</td><td>${fmt(txOld)}</td><td>${fmt(txNew)}</td></tr>
+    <tr class="t"><td>Tax for the year</td><td class="${oldWins?'win':''}">${fmt(tOld)}</td><td class="${!oldWins?'win':''}">${fmt(tNew)}</td></tr>`;
+
+  LAST={save,oldWins,age,basic,npsEmp,home,e80,p,interest,c80};
+  tips(LAST); invest();
+}
+
+function animatePaths(oldWins){
+  const path=oldWins?$('pathOld'):$('pathNew');
+  const dot=oldWins?$('dotOld'):$('dotNew');
+  const other=oldWins?$('dotNew'):$('dotOld');
+  const otherPath=oldWins?$('pathNew'):$('pathOld');
+  // emphasise winner
+  $('pathOld').style.opacity=oldWins?'.9':'.3';
+  $('pathNew').style.opacity=oldWins?'.3':'.9';
+  $('pathOld').style.strokeDasharray=oldWins?'none':'5 6';
+  $('pathNew').style.strokeDasharray=oldWins?'5 6':'none';
+  try{
+    const L=path.getTotalLength();
+    let start=null;const dur=1300;
+    const step=ts=>{if(!start)start=ts;const k=Math.min(1,(ts-start)/dur);
+      const pt=path.getPointAtLength(L*k);dot.setAttribute('cx',pt.x);dot.setAttribute('cy',pt.y);
+      if(k<1)requestAnimationFrame(step);};
+    requestAnimationFrame(step);
+    // park the losing climber low on its route
+    const Lo=otherPath.getTotalLength();const po=otherPath.getPointAtLength(Lo*0.35);
+    other.setAttribute('cx',po.x);other.setAttribute('cy',po.y);
+  }catch(e){}
+}
+
+function invest(){
+  const {save}=LAST; if(save==null)return;
+  if(save<1){$('grownV').textContent='—';$('grownVs').textContent='';return;}
+  const r=S.rate/100,n=S.yrs;
+  // future value of an annuity (saving invested each year)
+  const fv=save*((Math.pow(1+r,n)-1)/r);
+  const contributed=save*n;
+  $('grownV').textContent=fmt(fv);
+  $('grownVs').textContent='from '+fmt(contributed)+' of tax saved over '+n+' years, at '+S.rate+'%';
+}
+
+function tips(o){
+  const t=$('tips');t.innerHTML='';const L=[];
+  const room=Math.max(0,0.14*o.basic-o.npsEmp);
+  const leaf='<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v18M5 10c0 4 3 7 7 7M19 10c0 4-3 7-7 7"/></svg>';
+  if(room>1000&&o.p!=='business')L.push({b:'Both regimes',h:'Ask HR about employer NPS',
+    p:'Routing up to 14% of your basic into employer NPS (Section 80CCD-2) lowers tax in <b>both</b> regimes. You have roughly '+fmt(room)+' of unused room.'});
+  if(o.interest>50000&&o.age>=60)L.push({b:'Old regime',h:'Senior interest deduction',
+    p:'As a senior you can shelter up to ₹50,000 of deposit interest under Section 80TTB — already reflected above.'});
+  if(o.c80<150000&&o.p!=='business')L.push({b:'Old regime',h:'You haven\'t used your full 80C',
+    p:'You\'re about '+fmt(150000-o.c80)+' short of the ₹1.5L limit. Tax-saving instruments here reduce taxable income under the old regime — you may consider topping it up.'});
+  if(o.home===0)L.push({b:'Old regime',h:'Home-loan interest is a big lever',
+    p:'If you ever carry a home loan, up to ₹2L of interest is deductible (Section 24b) and is often what tips the balance toward the old regime.'});
+  L.push({b:'Both regimes',h:'Revisit this each year',
+    p:'Your best regime can flip as your income and deductions change. It\'s worth re-checking every year before you file.'});
+
+  L.forEach(x=>{const d=document.createElement('div');d.className='tip';
+    d.innerHTML=`<div class="ic">${leaf}</div><div><h4>${x.h}<span class="badge">${x.b}</span></h4><p>${x.p}</p></div>`;
+    t.appendChild(d);});
+}
+
+/* PDF — uses html2pdf if available, else falls back to the browser's print-to-PDF */
+$('dl').addEventListener('click',()=>{
+  if(typeof window.html2pdf!=='function'){ window.print(); return; }
+  const el=document.querySelector('.wrap');
+  const btns=$('dl').parentElement; btns.style.display='none';
+  html2pdf().set({margin:[8,8],filename:'ValuMonk-tax-report.pdf',
+    image:{type:'jpeg',quality:.97},html2canvas:{scale:2,useCORS:true},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+    pagebreak:{mode:['avoid-all','css']}})
+    .from(el).save().then(()=>{btns.style.display='flex';})
+    .catch(()=>{btns.style.display='flex';window.print();});
+});
+
+$('foot').innerHTML='<b>About this estimate.</b> Calculations follow the Income-tax rules for the selected year. New-regime slabs 0 / 5 / 10 / 15 / 20 / 25 / 30%; old-regime 0 / 5 / 20 / 30%. Standard deduction ₹75,000 (new) and ₹50,000 (old). The Section 87A rebate makes income up to ₹12 lakh (new) or ₹5 lakh (old) tax-free, with marginal relief; surcharge and 4% cess are included. The tool covers salary, pension, interest, rental and self-employment income — capital gains are not included. The "long view" figure is an illustration of compounding, not a forecast, and nothing here is investment or tax advice. Please confirm with a qualified professional before you file. © ValuMonk.';
+
+applyProfile();
+document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('input',calc));
+calc();
+</script>
+</body>
+</html>
