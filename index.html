@@ -143,12 +143,44 @@
     color:var(--faint);font-size:12.5px;line-height:1.75}
   footer b{color:var(--soft);font-weight:600}
 
+  /* report is hidden on screen, revealed only for printing */
+  #report{display:none}
   @media print{
     body{background:#fff}
-    .bar .nav,.actions{display:none!important}
-    .step,.result,.invest{box-shadow:none;break-inside:avoid}
-    .invest{background:var(--blue)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .toggle{box-shadow:none}
+    /* hide the whole interactive app */
+    .bar,.hero,.flow,.result,.invest,.step,.actions,footer{display:none!important}
+    /* show only the report */
+    #report{display:block!important}
+    .wrap{max-width:none;padding:0}
+  }
+  /* report internal styles (used when printing) */
+  #report .rep-h1{font-family:var(--serif);font-size:26px;color:var(--blue);margin:0 0 2px}
+  #report .rep-sub{color:var(--soft);font-size:13px;margin-bottom:20px}
+  #report .rep-hl{background:#f4f7f3;border-radius:14px;padding:22px;margin:16px 0;text-align:center}
+  #report .rep-hl .big{font-family:var(--serif);font-size:42px;font-weight:600;color:var(--green-deep)}
+  #report .rep-hl.b .big{color:var(--blue)}
+  #report .rep-two{display:flex;gap:14px;margin:16px 0}
+  #report .rep-two>div{flex:1;border:1px solid var(--line);border-radius:12px;padding:16px}
+  #report .rep-two .win{border-color:var(--green);background:#f5fcf8}
+  #report .rep-two .lab{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--faint)}
+  #report .rep-two .amt{font-family:var(--serif);font-size:26px;font-weight:600;margin-top:4px}
+  #report .rep-two .win .amt{color:var(--green-deep)}
+  #report h2.rep{font-family:var(--serif);font-size:17px;color:var(--blue);margin:24px 0 6px;
+    border-bottom:1px solid var(--line);padding-bottom:6px}
+  #report table.rep{width:100%;border-collapse:collapse;font-size:13px}
+  #report table.rep td{padding:9px 4px;border-top:1px solid var(--line2);text-align:right}
+  #report table.rep td:first-child{text-align:left;color:var(--soft)}
+  #report table.rep tr.b td{font-weight:700;color:var(--ink)}
+  #report table.rep tr.t td{border-top:2px solid var(--ink);font-weight:700;font-size:15px}
+  #report .rep-tips{padding-left:0;list-style:none}
+  #report .rep-tips li{margin-bottom:12px;padding-left:16px;position:relative;font-size:13px}
+  #report .rep-tips li::before{content:"›";position:absolute;left:0;color:var(--green);font-weight:700}
+  #report .rep-tips b{color:var(--ink)}
+  #report .rep-foot{font-size:10.5px;color:var(--faint);margin-top:26px;
+    border-top:1px solid var(--line);padding-top:12px;font-style:italic;line-height:1.6}
+  #report .rep-neg{color:var(--faint)}
+  @media print{
+    #report table.rep tr,#report .rep-two,#report .rep-hl{break-inside:avoid}
   }
 </style>
 </head>
@@ -399,14 +431,16 @@
   </div>
 
   <footer id="foot"></footer>
+
+  <!-- printable report (hidden on screen, shown only when printing) -->
+  <div id="report" aria-hidden="true"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
 const fmtL=n=>'₹'+(n/100000).toFixed(2)+' L';
-let S={profile:'salaried',city:'metro',fy:'2026',rate:10,yrs:10};
+let S={profile:'salaried',city:'metro',fy:'2025',rate:10,yrs:10};
 
 /* pill groups */
 document.querySelectorAll('.pills').forEach(p=>p.addEventListener('click',e=>{
@@ -501,7 +535,7 @@ function calc(){
     <tr class="b"><td>Taxable income</td><td>${fmt(txOld)}</td><td>${fmt(txNew)}</td></tr>
     <tr class="t"><td>Tax for the year</td><td class="${oldWins?'win':''}">${fmt(tOld)}</td><td class="${!oldWins?'win':''}">${fmt(tNew)}</td></tr>`;
 
-  LAST={save,oldWins,age,basic,npsEmp,home,e80,p,interest,c80};
+  LAST={save,oldWins,age,basic,npsEmp,home,e80,p,interest,c80,tOld,tNew,d80,rentPaid,hra,salLike,gross};
   tips(LAST); invest();
 }
 
@@ -542,34 +576,111 @@ function invest(){
 function tips(o){
   const t=$('tips');t.innerHTML='';const L=[];
   const room=Math.max(0,0.14*o.basic-o.npsEmp);
+  const c80room=Math.max(0,150000-o.c80);
   const leaf='<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v18M5 10c0 4 3 7 7 7M19 10c0 4-3 7-7 7"/></svg>';
-  if(room>1000&&o.p!=='business')L.push({b:'Both regimes',h:'Ask HR about employer NPS',
-    p:'Routing up to 14% of your basic into employer NPS (Section 80CCD-2) lowers tax in <b>both</b> regimes. You have roughly '+fmt(room)+' of unused room.'});
-  if(o.interest>50000&&o.age>=60)L.push({b:'Old regime',h:'Senior interest deduction',
-    p:'As a senior you can shelter up to ₹50,000 of deposit interest under Section 80TTB — already reflected above.'});
-  if(o.c80<150000&&o.p!=='business')L.push({b:'Old regime',h:'You haven\'t used your full 80C',
-    p:'You\'re about '+fmt(150000-o.c80)+' short of the ₹1.5L limit. Tax-saving instruments here reduce taxable income under the old regime — you may consider topping it up.'});
-  if(o.home===0)L.push({b:'Old regime',h:'Home-loan interest is a big lever',
+  const age=o.age, salaried=o.p==='salaried', working=o.p!=='retired';
+
+  // ---- universal high-value lever ----
+  if(room>1000 && salaried)L.push({b:'Both regimes',h:'Ask HR about employer NPS',
+    p:'Routing up to 14% of your basic into employer NPS (Section 80CCD-2) lowers tax in <b>both</b> regimes — the rare deduction the new regime still allows. You have roughly '+fmt(room)+' of unused room.'});
+
+  // ---- YOUNG / EARLY CAREER (under ~35) ----
+  if(age<35 && working){
+    L.push({b:'Old regime',h:'Start NPS early for the extra ₹50,000',
+      p:'Section 80CCD(1B) gives a deduction of up to ₹50,000 on your own NPS contribution, over and above 80C. Starting young means decades of compounding before retirement — you may consider opening an NPS account.'});
+    if(salaried)L.push({b:'Salaried perk',h:'Use meal cards if your employer offers them',
+      p:'Meal vouchers or food cards provided by an employer are a tax-exempt perquisite within limits. If your workplace offers one, it is a simple, legitimate way to reduce taxable salary — ask HR.'});
+  }
+
+  // ---- PARENT / FAMILY STAGE (roughly 30-50) ----
+  if(age>=30 && age<=52 && working){
+    if(c80room>0)L.push({b:'Old regime',h:'Children\'s school tuition counts toward 80C',
+      p:'Tuition fees paid to a school, college or university in India for up to two children qualify under Section 80C. If you pay tuition and haven\'t counted it, it can help fill your remaining '+fmt(c80room)+' of 80C room.'});
+    L.push({b:'Old regime',h:'Cover your parents\' health insurance',
+      p:'Premiums for your parents\' health cover are deductible under Section 80D — an extra ₹25,000, or ₹50,000 if a parent is a senior citizen — on top of your own family\'s cover. A genuine, often-missed deduction at this life stage.'});
+  }
+
+  // ---- PRE-RETIREMENT (52-60) ----
+  if(age>52 && age<60 && working){
+    L.push({b:'Old regime',h:'Maximise NPS in your final working years',
+      p:'The years just before retirement are when the NPS deductions (80CCD-1B\'s ₹50,000, plus employer NPS) matter most — they cut tax now and build your retirement corpus. You may consider topping these up while you still have salary income.'});
+  }
+
+  // ---- SENIORS (60+) ----
+  if(age>=60){
+    if(o.interest>50000)L.push({b:'Old regime',h:'Senior interest deduction (80TTB)',
+      p:'As a senior, up to ₹50,000 of interest from deposits is deductible under Section 80TTB — far more generous than what under-60s get. This is already reflected in your figures above.'});
+    L.push({b:'Old regime',h:'Higher health-insurance limit for seniors',
+      p:'Once you are 60+, your own health-insurance deduction under Section 80D rises to ₹50,000 (from ₹25,000). If your premiums are higher than you\'re currently claiming, you may be leaving a deduction unused.'});
+  }
+
+  // ---- conditional, any age ----
+  if(c80room>0 && working && !(age>=30&&age<=52))L.push({b:'Old regime',h:'You haven\'t used your full 80C',
+    p:'You\'re about '+fmt(c80room)+' short of the ₹1.5L limit. EPF, PPF, ELSS, life insurance and tuition fees all count — you may consider topping it up if the old regime suits you.'});
+  if(o.home===0 && age<55)L.push({b:'Old regime',h:'Home-loan interest is a big lever',
     p:'If you ever carry a home loan, up to ₹2L of interest is deductible (Section 24b) and is often what tips the balance toward the old regime.'});
-  L.push({b:'Both regimes',h:'Revisit this each year',
-    p:'Your best regime can flip as your income and deductions change. It\'s worth re-checking every year before you file.'});
+
+  // ---- always last ----
+  L.push({b:'Both regimes',h:'Revisit this every year',
+    p:'Your better regime can flip as income, age and deductions change. It\'s worth re-checking before each year\'s filing.'});
 
   L.forEach(x=>{const d=document.createElement('div');d.className='tip';
     d.innerHTML=`<div class="ic">${leaf}</div><div><h4>${x.h}<span class="badge">${x.b}</span></h4><p>${x.p}</p></div>`;
     t.appendChild(d);});
 }
 
-/* PDF — uses html2pdf if available, else falls back to the browser's print-to-PDF */
+/* Download report — fills an in-page report layer, then prints.
+   No popup window (which caused the blank-page bug). Output is true vector PDF. */
 $('dl').addEventListener('click',()=>{
-  if(typeof window.html2pdf!=='function'){ window.print(); return; }
-  const el=document.querySelector('.wrap');
-  const btns=$('dl').parentElement; btns.style.display='none';
-  html2pdf().set({margin:[8,8],filename:'ValuMonk-tax-report.pdf',
-    image:{type:'jpeg',quality:.97},html2canvas:{scale:2,useCORS:true},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    pagebreak:{mode:['avoid-all','css']}})
-    .from(el).save().then(()=>{btns.style.display='flex';})
-    .catch(()=>{btns.style.display='flex';window.print();});
+  const d=LAST; if(!d||d.tOld==null)return;
+  const oldWins=d.oldWins;
+  const today=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  const fyLabel=S.fy==='2025'?'FY 2025–26 (AY 2026–27)':'FY 2026–27 (AY 2027–28)';
+  const profileLabel={salaried:'Salaried',retired:'Retired / pensioner',business:'Self-employed'}[d.p];
+  const ageBand=d.age<60?'Below 60':d.age<80?'Senior citizen':'Super-senior';
+  const rows=$('bd').innerHTML;
+  const tipsHtml=[...document.querySelectorAll('#tips .tip')].map(t=>{
+    const h=t.querySelector('h4').childNodes[0].textContent.trim();
+    const badge=t.querySelector('.badge').textContent;
+    const p=t.querySelector('p').textContent;
+    return `<li><b>${h}</b> &middot; <span style="color:#313495">${badge}</span><br>${p}</li>`;}).join('');
+
+  $('report').innerHTML=`
+    <div class="rep-h1">ValuMonk &middot; Old vs New Regime</div>
+    <div class="rep-sub">Personal tax estimate &nbsp;|&nbsp; ${fyLabel} &nbsp;|&nbsp; prepared ${today}</div>
+
+    <h2 class="rep">Your profile</h2>
+    <table class="rep">
+      <tr><td>Age group</td><td>${ageBand} (${d.age})</td></tr>
+      <tr><td>You are</td><td>${profileLabel}</td></tr>
+      <tr><td>Total income considered</td><td>${fmt(d.tNew!=null?d.gross:0)}</td></tr>
+    </table>
+
+    <div class="rep-hl ${oldWins?'b':''}">
+      <div>By choosing the <b>${oldWins?'old':'new'}</b> regime, you keep</div>
+      <div class="big">${d.save<1?'₹0 difference':fmt(d.save)}</div>
+      <div>${d.save<1?'either regime works equally for you':'extra every year — about '+fmt(d.save/12)+' a month'}</div>
+    </div>
+    <div class="rep-two">
+      <div class="${oldWins?'win':''}"><div class="lab">Old regime${oldWins?' · lower':''}</div><div class="amt">${fmt(d.tOld)}</div></div>
+      <div class="${!oldWins?'win':''}"><div class="lab">New regime${!oldWins?' · lower':''}</div><div class="amt">${fmt(d.tNew)}</div></div>
+    </div>
+
+    <h2 class="rep">How we got there</h2>
+    <table class="rep">
+      <tr style="color:#9aa69f;font-size:11px"><td>Component</td><td>Old regime</td><td>New regime</td></tr>
+      ${rows}
+    </table>
+
+    <h2 class="rep">The long view — if you invested the saving</h2>
+    <p style="font-size:13px;color:#5b6b62">If your annual tax saving of <b style="color:#14271f">${d.save<1?'₹0':fmt(d.save)}</b> were invested each year at an assumed ${S.rate}% return, after ${S.yrs} years it could grow to roughly <b style="color:#048a3e">${$('grownV').textContent}</b>. This is an illustration of compounding, not a forecast or guarantee, and is not investment advice.</p>
+
+    <h2 class="rep">Ways you might save more</h2>
+    <ul class="rep-tips">${tipsHtml}</ul>
+
+    <div class="rep-foot">${$('foot').textContent}</div>`;
+
+  window.print();
 });
 
 $('foot').innerHTML='<b>About this estimate.</b> Calculations follow the Income-tax rules for the selected year. New-regime slabs 0 / 5 / 10 / 15 / 20 / 25 / 30%; old-regime 0 / 5 / 20 / 30%. Standard deduction ₹75,000 (new) and ₹50,000 (old). The Section 87A rebate makes income up to ₹12 lakh (new) or ₹5 lakh (old) tax-free, with marginal relief; surcharge and 4% cess are included. The tool covers salary, pension, interest, rental and self-employment income — capital gains are not included. The "long view" figure is an illustration of compounding, not a forecast, and nothing here is investment or tax advice. Please confirm with a qualified professional before you file. © ValuMonk.';
