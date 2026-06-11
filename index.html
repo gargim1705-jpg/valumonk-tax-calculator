@@ -40,7 +40,7 @@
   /* ---- top bar ---- */
   .bar{display:flex;justify-content:center;align-items:center;padding:26px 0 6px}
   .logo{display:flex;align-items:center;gap:12px}
-  .brandlogo{height:62px;width:auto;display:block}
+  .brandlogo{height:84px;width:auto;display:block}
 
   /* ---- hero ---- */
   .hero{position:relative;text-align:center;padding:46px 0 0;overflow:hidden}
@@ -165,8 +165,10 @@
   /* ---- download ---- */
   .actions{margin-top:30px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
   .btn{border:none;cursor:pointer;font-family:var(--sans);font-weight:600;font-size:15px;
-    padding:14px 26px;border-radius:100px;transition:.15s}
+    padding:14px 26px;border-radius:100px;transition:.15s;text-decoration:none;
+    display:inline-flex;align-items:center;justify-content:center;line-height:1}
   .btn.primary{background:var(--green);color:#fff}.btn.primary:hover{background:var(--green-deep)}
+  .btn.contact{background:var(--blue);color:#fff}.btn.contact:hover{background:#272a7a}
   .btn.ghost{background:none;border:1.5px solid var(--line);color:var(--ink)}.btn.ghost:hover{border-color:var(--soft)}
 
   footer{margin:60px 0 48px;padding-top:26px;border-top:1px solid var(--line);
@@ -486,6 +488,7 @@
 
   <div class="actions">
     <button class="btn primary" id="dl">Download my report (PDF)</button>
+    <a class="btn contact" href="https://valumonk.com/contact/" target="_blank" rel="noopener">Talk to ValuMonk →</a>
     <button class="btn ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">Start over</button>
   </div>
   </div><!-- end fullrow -->
