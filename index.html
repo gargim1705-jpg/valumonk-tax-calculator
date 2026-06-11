@@ -22,11 +22,11 @@
   html{scroll-behavior:smooth}
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
     font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 26px}
 
   /* two-panel layout: inputs left, results right (sticky) */
-  .panels{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);
-    gap:28px;align-items:start;margin-top:54px}
+  .panels{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);
+    gap:26px;align-items:start;margin-top:48px}
   .flow{margin-top:0}
   .resultcol{position:sticky;top:18px;display:flex;flex-direction:column;gap:20px}
   .resultcol .result{margin-top:0}
@@ -60,7 +60,13 @@
   .toggle-note{font-size:13px;color:var(--faint);margin-top:12px;min-height:18px;font-style:italic;font-family:var(--serif)}
 
   /* ---- step cards ---- */
-  .flow{display:flex;flex-direction:column;gap:20px}
+  .flow{display:flex;flex-direction:column;gap:0;
+    background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:6px 32px;box-shadow:var(--sh)}
+  /* steps inside the flow become borderless sections separated by thin rules */
+  .flow .step{background:none;border:none;border-radius:0;box-shadow:none;
+    padding:26px 0;border-top:1px solid var(--line2)}
+  .flow .step:first-child{border-top:none}
   .step{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px 32px;box-shadow:var(--sh)}
   .step-h{display:flex;align-items:center;gap:13px;margin-bottom:24px}
   .step-h .dot{width:30px;height:30px;border-radius:50%;background:var(--sky);color:var(--green-deep);
