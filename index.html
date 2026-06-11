@@ -30,6 +30,7 @@
   .flow{margin-top:0}
   .resultcol{position:sticky;top:18px;display:flex;flex-direction:column;gap:20px}
   .resultcol .result{margin-top:0}
+  .fullrow{margin-top:22px}
   @media(max-width:900px){
     .panels{grid-template-columns:1fr;gap:22px}
     .resultcol{position:static}
@@ -465,8 +466,13 @@
     <p class="dis">This shows what your <b style="color:#fff">annual</b> tax saving could become if invested each year at the assumed return — illustrative only, compounded yearly. Returns are not guaranteed and investments carry risk. This is not investment advice.</p>
   </div>
 
+  </div><!-- end results column -->
+  </div><!-- end panels -->
+
+  <!-- FULL WIDTH below the two panels -->
+  <div class="fullrow">
   <!-- BREAKDOWN -->
-  <div class="step" style="margin-top:20px">
+  <div class="step">
     <div class="step-h"><span class="dot">✓</span><h2>How we got there</h2><span class="tail">annual figures</span></div>
     <table><thead><tr><th>Component</th><th>Old regime</th><th>New regime</th></tr></thead>
       <tbody id="bd"></tbody></table>
@@ -482,9 +488,7 @@
     <button class="btn primary" id="dl">Download my report (PDF)</button>
     <button class="btn ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">Start over</button>
   </div>
-
-  </div><!-- end results column -->
-  </div><!-- end panels -->
+  </div><!-- end fullrow -->
 
   <footer id="foot"></footer>
 
