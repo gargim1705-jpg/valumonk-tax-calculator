@@ -62,6 +62,18 @@
   .f{display:flex;flex-direction:column}.f.full{grid-column:1/-1}
   .f label{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:7px}
   .f .sub{font-size:12px;color:var(--faint);margin-top:6px}
+  /* help asterisk + explanation */
+  .qmark{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
+    margin-left:6px;border-radius:50%;border:1.3px solid var(--faint);color:var(--soft);
+    font-size:11px;font-weight:700;cursor:pointer;line-height:1;vertical-align:middle;
+    transition:.15s;user-select:none;font-family:var(--sans)}
+  .qmark:hover{border-color:var(--green);color:var(--green-deep);background:var(--sky)}
+  .qmark.on{border-color:var(--green);color:#fff;background:var(--green)}
+  .explain{display:none;margin-top:9px;background:var(--sky);border:1px solid #dce8e0;
+    border-left:3px solid var(--green);border-radius:8px;padding:11px 13px;font-size:12.5px;
+    color:var(--soft);line-height:1.55}
+  .explain.show{display:block}
+  .explain b{color:var(--ink);font-weight:600}
   .inp{position:relative}
   .inp .ru{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:15px}
   .f input[type=number]{width:100%;border:1.5px solid var(--line);border-radius:12px;
@@ -239,25 +251,28 @@
       <div class="step-h"><span class="dot">1</span><h2>About you</h2><span class="tail" id="t1"></span></div>
       <div class="grid2">
         <div class="f">
-          <label>Your age</label>
+          <label>Your age<span class="qmark" data-help="ageHelp">?</span></label>
           <div class="inp"><input type="number" id="age" value="35" min="18" max="120"></div>
           <span class="sub" id="ageSub"></span>
+          <div class="explain" id="ageHelp">Your age decides how much income is tax-free under the <b>old</b> regime. Below 60: first ₹2.5L is tax-free. Senior citizens (60–79): ₹3L. Super-seniors (80+): ₹5L. Seniors also get an extra deduction on interest income (Section 80TTB). The new regime is the same for all ages.</div>
         </div>
         <div class="f">
-          <label>What describes you best</label>
+          <label>What describes you best<span class="qmark" data-help="profHelp">?</span></label>
           <div class="pills" id="profile">
             <button data-v="salaried" class="on">Salaried</button>
             <button data-v="retired">Retired</button>
             <button data-v="business">Self-employed</button>
           </div>
+          <div class="explain" id="profHelp"><b>Salaried</b> — you earn a salary from an employer. <b>Retired</b> — you live on a pension and/or savings. <b>Self-employed</b> — you run a business or work as a professional (freelancer, consultant, doctor, etc.). We adjust the questions to fit you — for example, salary and HRA only apply to salaried people.</div>
         </div>
         <div class="f" id="cityF">
-          <label>Do you live in a metro city?</label>
+          <label>Do you live in a metro city?<span class="qmark" data-help="cityHelp">?</span></label>
           <div class="pills" id="city">
             <button data-v="metro" class="on">Yes — metro</button>
             <button data-v="nonmetro">No</button>
           </div>
           <span class="sub" id="citySub"></span>
+          <div class="explain" id="cityHelp"></div>
         </div>
       </div>
     </div>
@@ -267,39 +282,46 @@
       <div class="step-h"><span class="dot">2</span><h2 id="incH">What you earn</h2><span class="tail" id="t2"></span></div>
       <div class="grid2">
         <div class="f" id="salF">
-          <label>Annual salary</label>
+          <label>Annual salary<span class="qmark" data-help="salHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="salary" value="1980000"></div>
           <span class="sub">Gross, before tax</span>
+          <div class="explain" id="salHelp">Your total yearly salary <b>before</b> any tax is deducted — the gross figure (Cost to Company is fine if that's what you know). Include bonuses and allowances. This is found on your salary slip or Form 16.</div>
         </div>
         <div class="f hide" id="penF">
-          <label>Annual pension</label>
+          <label>Annual pension<span class="qmark" data-help="penHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="pension" value="0"></div>
           <span class="sub">Gross pension received in the year</span>
+          <div class="explain" id="penHelp">The total pension you received over the year, before tax. Pension is taxed much like salary, and pensioners also get the standard deduction.</div>
         </div>
         <div class="f hide" id="bizF">
-          <label>Business / professional income</label>
+          <label>Business / professional income<span class="qmark" data-help="bizHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="biz" value="0"></div>
           <span class="sub">Net profit, after expenses</span>
+          <div class="explain" id="bizHelp">Your <b>net</b> profit — income left after subtracting business expenses. This is your taxable business/professional income for the year.</div>
         </div>
         <div class="f" id="basicF">
-          <label>Basic + DA</label>
+          <label>Basic + DA<span class="qmark" data-help="basicHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="basic" value="990000"></div>
           <span class="sub">Used for the rent &amp; NPS limits</span>
+          <div class="explain" id="basicHelp"><b>Basic salary</b> plus <b>Dearness Allowance (DA)</b> — the core part of your pay, shown separately on your salary slip. It's usually 40–50% of your total salary. We need it because the rent (HRA) and NPS deduction limits are calculated as a percentage of this, not your full salary.</div>
         </div>
         <div class="f" id="hraF">
-          <label>HRA you receive</label>
+          <label>HRA you receive<span class="qmark" data-help="hraHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="hra" value="396000"></div>
           <span class="sub">House-rent allowance, annual</span>
+          <div class="explain" id="hraHelp">The <b>House Rent Allowance</b> portion of your salary for the year — a separate line on your salary slip. It's only useful for tax if you actually pay rent, and only under the old regime. Leave it as-is if you're not sure; it won't hurt your new-regime figure.</div>
         </div>
         <div class="f">
-          <label>Interest income</label>
+          <label>Interest income<span class="qmark" data-help="intHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="interest" value="0"></div>
           <span class="sub">Fixed deposits, savings, bonds</span>
+          <div class="explain" id="intHelp">Total interest you earned this year — from fixed deposits, savings accounts, bonds and similar. Banks report this, and it's taxable. Senior citizens get a special deduction of up to ₹50,000 on this under the old regime (Section 80TTB).</div>
         </div>
         <div class="f">
-          <label>Rental income received</label>
+          <label>Rental income received<span class="qmark" data-help="rentHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="rental" value="0"></div>
           <span class="sub">Net rent, if you let out property</span>
+          <div class="explain" id="rentHelp">Rent you <b>received</b> from a property you own and let out, over the year. Leave blank if you don't rent out any property. (This is different from rent you <b>pay</b>, which comes later.)</div>
         </div>
       </div>
     </div>
@@ -311,39 +333,46 @@
       <p style="margin:-8px 0 22px;color:var(--soft);font-size:14.5px">These mostly help the <b style="color:var(--ink)">old</b> regime. Leave blank what doesn't apply — the new regime ignores most of them anyway.</p>
       <div class="grid2">
         <div class="f" id="rentPaidF">
-          <label>Rent you pay</label>
+          <label>Rent you pay<span class="qmark" data-help="rpHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="rentPaid" value="360000"></div>
           <span class="sub">Annual, counts toward the rent benefit</span>
+          <div class="explain" id="rpHelp">Total rent you <b>paid</b> for your home this year. Together with your HRA and city, this decides your rent tax-benefit (HRA exemption) — but only under the old regime. Leave blank if you don't pay rent.</div>
         </div>
         <div class="f">
-          <label>80C investments</label>
+          <label>80C investments<span class="qmark" data-help="c80Help">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="c80" value="150000"></div>
           <span class="sub">EPF, PPF, ELSS, insurance — capped at ₹1.5L</span>
+          <div class="explain" id="c80Help">Section 80C covers many common tax-savers, capped at <b>₹1.5 lakh</b> total: EPF/PF deducted from salary, PPF, ELSS funds, life-insurance premiums, the principal part of home-loan EMIs, NSC, tax-saving FDs, and <b>children's school/college tuition fees</b>. Add up whatever applies. Old regime only.</div>
         </div>
         <div class="f">
-          <label>Your own NPS (80CCD-1B)</label>
+          <label>Your own NPS (80CCD-1B)<span class="qmark" data-help="nps1Help">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="nps1b" value="0"></div>
           <span class="sub">Extra ₹50,000 — old regime only</span>
+          <div class="explain" id="nps1Help">Money <b>you</b> put into the National Pension System (NPS) yourself. This gives an extra deduction of up to ₹50,000, over and above the 80C limit — but only under the old regime. Leave blank if you don't contribute to NPS personally.</div>
         </div>
         <div class="f">
-          <label>Employer's NPS contribution</label>
+          <label>Employer's NPS contribution<span class="qmark" data-help="npsEHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="npsEmp" value="0"></div>
           <span class="sub">Helps in both regimes — up to 14% of basic</span>
+          <div class="explain" id="npsEHelp">NPS contributed by your <b>employer</b> on your behalf (Section 80CCD-2). This is special: it's one of the very few deductions that lowers tax in <b>both</b> the old and new regimes. The limit is 14% of your Basic + DA. Ask HR if you're unsure whether you have this.</div>
         </div>
         <div class="f">
-          <label>Health insurance (80D)</label>
+          <label>Health insurance (80D)<span class="qmark" data-help="d80Help">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="d80" value="25000"></div>
           <span class="sub">Premiums for you and your parents</span>
+          <div class="explain" id="d80Help">Health-insurance premiums you pay, under Section 80D. Up to ₹25,000 for yourself and family, plus another ₹25,000 for parents — and these limits rise to ₹50,000 each when the person insured is a senior citizen. Old regime only.</div>
         </div>
         <div class="f">
-          <label>Home loan interest</label>
+          <label>Home loan interest<span class="qmark" data-help="homeHelp">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="home" value="0"></div>
           <span class="sub">Self-occupied — capped at ₹2L, old only</span>
+          <div class="explain" id="homeHelp">The <b>interest</b> part of your home-loan EMIs for the year (not the principal — that goes under 80C). For a home you live in, up to ₹2 lakh is deductible under Section 24(b). Old regime only, and often the single biggest reason the old regime wins.</div>
         </div>
         <div class="f">
-          <label>Education loan interest (80E)</label>
+          <label>Education loan interest (80E)<span class="qmark" data-help="e80Help">?</span></label>
           <div class="inp"><span class="ru">₹</span><input type="number" id="e80" value="0"></div>
           <span class="sub">No cap, old regime only</span>
+          <div class="explain" id="e80Help">Interest paid on a loan taken for higher education — yours, your spouse's or your children's — under Section 80E. There's <b>no upper limit</b>, and it can be claimed for up to 8 years. Old regime only.</div>
         </div>
       </div>
     </div>
@@ -462,9 +491,26 @@ $('yt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)re
     : 'Tax year ending March 2027 · Income-tax Act, 2025';
   $('citySub').textContent = S.fy==='2026'
     ? 'From this year, Bengaluru, Pune, Hyderabad & Ahmedabad also count as metros.' : '';
+  updateCityHelp();
   calc();
 });
 $('yrs').addEventListener('input',()=>{S.yrs=+$('yrs').value;$('yrsN').textContent=S.yrs;invest();});
+
+/* year-aware metro-city explanation */
+function updateCityHelp(){
+  const base='A "metro" gets the higher <b>50%</b> rent-benefit cap; all other cities get <b>40%</b>. This only matters under the old regime, if you pay rent.';
+  $('cityHelp').innerHTML = S.fy==='2025'
+    ? base+'<br><br>For <b>FY 2025–26</b>, only <b>4 cities</b> count as metro: Mumbai, Delhi, Kolkata and Chennai. Everywhere else — including Bengaluru, Pune, Hyderabad and Ahmedabad — is non-metro this year. So if you live in one of those four, choose "No".'
+    : base+'<br><br>For <b>FY 2026–27</b>, the list expands to <b>8 cities</b>: Mumbai, Delhi, Kolkata, Chennai, plus the newly-added Bengaluru, Pune, Hyderabad and Ahmedabad. If you live in any of these eight, choose "Yes — metro". Gurgaon, Noida, Jaipur and other cities remain non-metro.';
+}
+
+/* help asterisks — click to expand the explanation under each field */
+document.querySelectorAll('.qmark').forEach(q=>q.addEventListener('click',e=>{
+  e.stopPropagation();
+  const box=$(q.dataset.help);
+  const open=box.classList.toggle('show');
+  q.classList.toggle('on',open);
+}));
 
 function applyProfile(){const p=S.profile;
   $('salF').classList.toggle('hide',p!=='salaried');
@@ -686,6 +732,7 @@ $('dl').addEventListener('click',()=>{
 $('foot').innerHTML='<b>About this estimate.</b> Calculations follow the Income-tax rules for the selected year. New-regime slabs 0 / 5 / 10 / 15 / 20 / 25 / 30%; old-regime 0 / 5 / 20 / 30%. Standard deduction ₹75,000 (new) and ₹50,000 (old). The Section 87A rebate makes income up to ₹12 lakh (new) or ₹5 lakh (old) tax-free, with marginal relief; surcharge and 4% cess are included. The tool covers salary, pension, interest, rental and self-employment income — capital gains are not included. The "long view" figure is an illustration of compounding, not a forecast, and nothing here is investment or tax advice. Please confirm with a qualified professional before you file. © ValuMonk.';
 
 applyProfile();
+updateCityHelp();
 document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('input',calc));
 calc();
 </script>
