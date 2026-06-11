@@ -22,7 +22,18 @@
   html{scroll-behavior:smooth}
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
     font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+  /* two-panel layout: inputs left, results right (sticky) */
+  .panels{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);
+    gap:28px;align-items:start;margin-top:54px}
+  .flow{margin-top:0}
+  .resultcol{position:sticky;top:18px;display:flex;flex-direction:column;gap:20px}
+  .resultcol .result{margin-top:0}
+  @media(max-width:900px){
+    .panels{grid-template-columns:1fr;gap:22px}
+    .resultcol{position:static}
+  }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
   /* ---- top bar ---- */
@@ -49,7 +60,7 @@
   .toggle-note{font-size:13px;color:var(--faint);margin-top:12px;min-height:18px;font-style:italic;font-family:var(--serif)}
 
   /* ---- step cards ---- */
-  .flow{margin-top:54px;display:flex;flex-direction:column;gap:20px}
+  .flow{display:flex;flex-direction:column;gap:20px}
   .step{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px 32px;box-shadow:var(--sh)}
   .step-h{display:flex;align-items:center;gap:13px;margin-bottom:24px}
   .step-h .dot{width:30px;height:30px;border-radius:50%;background:var(--sky);color:var(--green-deep);
@@ -86,7 +97,7 @@
   .hide{display:none!important}
 
   /* ---- result / mountain signature ---- */
-  .result{margin-top:46px;background:linear-gradient(180deg,#fff,#fafdfb);
+  .result{background:linear-gradient(180deg,#fff,#fafdfb);
     border:1px solid var(--line);border-radius:24px;padding:42px 34px;box-shadow:var(--sh);text-align:center;position:relative;overflow:hidden}
   .result .lead{font-size:16px;color:var(--soft)}
   .bignum{font-family:var(--serif);font-weight:600;font-size:clamp(48px,11vw,90px);line-height:1;
@@ -243,6 +254,9 @@
     <div class="toggle-note" id="ytn">Tax year ending March 2026 · Income-tax Act, 1961</div>
   </div>
 
+  <!-- TWO-PANEL: inputs left, results right -->
+  <div class="panels">
+
   <!-- FLOW -->
   <div class="flow">
 
@@ -377,6 +391,10 @@
       </div>
     </div>
   </div>
+  <!-- end inputs column -->
+
+  <!-- RIGHT: results column -->
+  <div class="resultcol">
 
   <!-- RESULT -->
   <div class="result" id="resultCard">
@@ -459,6 +477,9 @@
     <button class="btn ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">Start over</button>
   </div>
 
+  </div><!-- end results column -->
+  </div><!-- end panels -->
+
   <footer id="foot"></footer>
 
   <!-- printable report (hidden on screen, shown only when printing) -->
@@ -526,9 +547,42 @@ function applyProfile(){const p=S.profile;
 function slab(inc,s){let t=0,p=0;for(const[c,r]of s){if(inc>p){t+=(Math.min(inc,c)-p)*r;p=c;}else break;}return t;}
 const NEW=[[400000,0],[800000,.05],[1200000,.10],[1600000,.15],[2000000,.20],[2400000,.25],[Infinity,.30]];
 function oldS(age){const e=age>=80?500000:age>=60?300000:250000;return[[e,0],[500000,.05],[1000000,.20],[Infinity,.30]];}
-function surch(t,i){let r=0;if(i>50000000)r=.37;else if(i>20000000)r=.25;else if(i>10000000)r=.15;else if(i>5000000)r=.10;return t*r;}
-function taxNew(x){let t=slab(x,NEW);if(x<=1200000)t=Math.max(0,t-Math.min(t,60000));else t=Math.min(t,x-1200000);return(t+surch(t,x))*1.04;}
-function taxOld(x,age){let t=slab(x,oldS(age));if(x<=500000)t=Math.max(0,t-Math.min(t,12500));return(t+surch(t,x))*1.04;}
+
+/* surcharge rate by income; new regime is capped at 25% (no 37% band) */
+function surchRate(i,isNew){
+  if(i<=5000000)return 0;
+  if(i<=10000000)return .10;
+  if(i<=20000000)return .15;
+  if(i<=50000000)return .25;
+  return isNew?.25:.37;
+}
+/* base income tax (slabs + rebate) for a regime, BEFORE surcharge/cess */
+function baseTax(x,isNew,age){
+  if(isNew){let t=slab(x,NEW);
+    if(x<=1200000)t=Math.max(0,t-Math.min(t,60000)); // 87A rebate
+    else t=Math.min(t,x-1200000);                    // rebate marginal relief
+    return t;}
+  let t=slab(x,oldS(age));
+  if(x<=500000)t=Math.max(0,t-Math.min(t,12500));    // 87A old
+  return t;
+}
+/* full tax incl. surcharge (with marginal relief at each threshold) + 4% cess */
+function fullTax(x,isNew,age){
+  const base=baseTax(x,isNew,age);
+  let withSc=base+base*surchRate(x,isNew);
+  // surcharge marginal relief at each threshold the income has crossed
+  const THRESHOLDS=[5000000,10000000,20000000,50000000];
+  for(const th of THRESHOLDS){
+    if(x>th){
+      const taxAtTh=baseTax(th,isNew,age)*(1+surchRate(th-1,isNew)); // tax just below threshold
+      const cap=taxAtTh+(x-th); // tax may not exceed (tax at threshold + income above it)
+      if(withSc>cap)withSc=cap;
+    }
+  }
+  return withSc*1.04;
+}
+function taxNew(x){return fullTax(x,true,0);}
+function taxOld(x,age){return fullTax(x,false,age);}
 
 let LAST={};
 function calc(){
